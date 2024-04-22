@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String
+  email     String    @unique
+  password  String
+  image     String?   @default("")
+  bio       String?
+  role      Role      @default(user)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now())
+  articles  Article[]
+  comments  Comment[]
+  favorites Article[] @relation("UserArticles")
+  follower  User[]    @relation("UserFollowers")
+  following User[]    @relation("UserFollowers")
+}
+
+model Article {
+  id          Int       @id @default(autoincrement())
+  slug        String    @unique
+  title       String    @unique
+  description String    @default("")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now())
+  autherId    Int
+  auther      User      @relation(fields: [autherId], references: [id])
+  comments    Comment[]
+  tags        Tag[]
+  favoritedBy User[]    @relation("UserArticles")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    Int
+  User      User     @relation(fields: [userId], references: [id])
+  articleId Int
+  article   Article  @relation(fields: [articleId], references: [id])
+}
+
+model Tag {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  updatedAt DateTime  @updatedAt
+  articles  Article[]
+}
+
+enum Role {
+  admin
+  user
+}
